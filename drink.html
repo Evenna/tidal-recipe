@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潮汐配方｜饮品详情</title>
+<style>
+  :root{ --ink:#e8f0f4; --dim:#6b8494; --line:#1a3340; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ background:#050d12; color:var(--ink); font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; overflow-x:hidden; }
+  a{ color:inherit; text-decoration:none; }
+
+  .back{ position:fixed; top:24px; left:24px; z-index:20; font-size:13px; color:var(--dim); letter-spacing:.1em; padding:8px 14px; border:1px solid var(--line); border-radius:99px; background:rgba(5,13,18,.7); backdrop-filter:blur(6px); transition:.3s; }
+  .back:hover{ color:var(--ink); border-color:var(--dim); }
+
+  .stage{ min-height:100vh; display:grid; grid-template-columns:1fr 1fr; gap:0; }
+  @media(max-width:860px){ .stage{ grid-template-columns:1fr; } }
+
+  /* 左：管道 + 杯子 */
+  .visual{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:0; background:linear-gradient(180deg,#071a24,#04121a); overflow:hidden; min-height:100vh; }
+  .pipe{ width:46px; height:34vh; background:linear-gradient(90deg,#12303c,#1d4453,#12303c); border-left:1px solid #2a5060; border-right:1px solid #2a5060; position:relative; box-shadow:inset 0 0 20px rgba(0,0,0,.5); }
+  .pipe::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:14px; height:100%; background:var(--liquid,#3a7a8a); opacity:.85; animation:flow 2.5s linear infinite; background-image:linear-gradient(180deg,transparent,var(--liquid,#3a7a8a),transparent); background-size:100% 40px; }
+  @keyframes flow{ from{background-position:0 -40px;} to{background-position:0 40px;} }
+  .pipe-joint{ width:70px; height:20px; background:linear-gradient(90deg,#0e2833,#1d4453,#0e2833); border:1px solid #2a5060; border-radius:3px; margin-top:-2px; }
+
+  .cup{ margin-top:20px; width:170px; height:230px; position:relative; }
+  .cup-body{ position:absolute; inset:0; border:3px solid #cbd8de; border-top:none; border-radius:10px 10px 40px 40px / 10px 10px 30px 30px; overflow:hidden; background:rgba(255,255,255,.03); clip-path:polygon(8% 0,92% 0,84% 100%,16% 100%); }
+  .liquid-fill{ position:absolute; left:0; right:0; bottom:0; height:var(--level,72%); background:var(--liquid,#3a7a8a); transition:height 1s, background 1s; }
+  .liquid-fill::before{ content:""; position:absolute; top:0; left:0; right:0; height:14px; background:var(--foam,rgba(255,255,255,.25)); }
+  .toppings-layer{ position:absolute; inset:0; pointer-events:none; }
+  .bead{ position:absolute; width:9px; height:9px; border-radius:50%; }
+  .straw{ position:absolute; top:-30px; left:54%; width:10px; height:150px; background:linear-gradient(90deg,#e85d75,#ff8fa3); transform:rotate(8deg); border-radius:4px; z-index:2; }
+
+  .concentration{ margin-top:34px; text-align:center; }
+  .concentration .bar{ width:220px; height:6px; background:#0e2833; border-radius:3px; overflow:hidden; margin:12px auto 0; }
+  .concentration .bar i{ display:block; height:100%; width:var(--conc,50%); background:linear-gradient(90deg,#5fd0e0,#e8b33a,#e85d5d); transition:width 1s; }
+  .concentration .clabel{ font-size:12px; color:var(--dim); letter-spacing:.1em; }
+  .concentration .cval{ font-size:13px; color:var(--ink); margin-top:8px; }
+
+  /* 右：内容 */
+  .content{ padding:80px 56px; display:flex; flex-direction:column; justify-content:center; }
+  @media(max-width:860px){ .content{ padding:48px 28px; } }
+  .eyebrow{ font-size:12px; letter-spacing:.3em; color:var(--dim); text-transform:uppercase; }
+  .drink-name{ font-size:clamp(30px,5vw,46px); font-weight:200; letter-spacing:.06em; margin:18px 0 6px; line-height:1.15; }
+  .water-name{ font-size:15px; color:#5fd0e0; letter-spacing:.15em; margin-bottom:28px; }
+  .story{ font-size:16px; line-height:2.1; color:#a8c0cc; font-weight:300; border-left:2px solid var(--line); padding-left:20px; margin-bottom:32px; }
+
+  .card{ border:1px solid var(--line); border-radius:10px; padding:22px 24px; margin-bottom:16px; background:rgba(10,34,48,.35); }
+  .card h4{ font-size:12px; letter-spacing:.2em; color:var(--dim); margin-bottom:14px; text-transform:uppercase; font-weight:400; }
+  .kv{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--line); font-size:14px; }
+  .kv:last-child{ border-bottom:none; }
+  .kv span:first-child{ color:var(--dim); }
+  .kv span:last-child{ color:var(--ink); text-align:right; }
+  .live-tag{ color:#5fd0e0 !important; }
+
+  .toppings{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ font-size:12px; padding:6px 12px; border:1px solid var(--line); border-radius:99px; color:#a8c0cc; }
+
+  .fact{ font-size:13px; color:var(--dim); letter-spacing:.05em; margin-top:8px; }
+  .callout{ margin-top:24px; padding:18px 22px; background:rgba(95,208,224,.06); border:1px solid rgba(95,208,224,.2); border-radius:10px; font-size:14px; line-height:1.9; color:#bfe8ee; }
+  .updated{ font-size:11px; color:var(--dim); margin-top:14px; letter-spacing:.1em; }
+</style>
+</head>
+<body>
+<a href="index.html" class="back">← 返回海图</a>
+
+<div class="stage">
+  <div class="visual">
+    <div class="pipe"><div class="pipe-inner"></div></div>
+    <div class="pipe-joint"></div>
+    <div class="cup">
+      <div class="straw"></div>
+      <div class="cup-body">
+        <div class="liquid-fill" id="liquid"></div>
+        <div class="toppings-layer" id="toppings"></div>
+      </div>
+    </div>
+    <div class="concentration">
+      <div class="clabel" id="conc-label">污染浓度</div>
+      <div class="bar"><i id="conc-bar"></i></div>
+      <div class="cval" id="conc-val">读取中…</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="eyebrow" id="eyebrow">POLLUTED WATER</div>
+    <h1 class="drink-name" id="drink-name">—</h1>
+    <div class="water-name" id="water-name">—</div>
+    <p class="story" id="story">—</p>
+
+    <div class="card">
+      <h4>污染档案 · Pollution File</h4>
+      <div class="kv"><span>水域坐标</span><span id="coord">—</span></div>
+      <div class="kv"><span>主要污染物</span><span id="pollutant">—</span></div>
+      <div class="kv"><span id="metric-name">实时监测指标</span><span class="live-tag" id="metric-val">读取中…</span></div>
+      <div class="kv"><span>海表温度（实时）</span><span class="live-tag" id="sst-val">读取中…</span></div>
+      <div class="fact" id="fact">—</div>
+    </div>
+
+    <div class="card">
+      <h4>配方构成 · Recipe（随污染实时调整）</h4>
+      <div class="kv"><span>基底</span><span id="base">—</span></div>
+      <div style="margin-top:14px" class="toppings" id="topping-chips"></div>
+    </div>
+
+    <div class="callout" id="callout">—</div>
+    <div class="updated" id="updated"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const key = params.get('w') || 'gpgp';
+const w = WATERS.find(x => x.key === key) || WATERS[0];
+
+// 填静态内容
+document.title = `潮汐配方｜${w.drink}`;
+document.getElementById('eyebrow').textContent = w.pollutantEn.toUpperCase();
+document.getElementById('drink-name').textContent = w.drink;
+document.getElementById('water-name').textContent = `${w.name} · ${w.nameEn}`;
+document.getElementById('story').textContent = w.story;
+document.getElementById('coord').textContent = `${w.lat.toFixed(1)}, ${w.lon.toFixed(1)}`;
+document.getElementById('pollutant').textContent = w.pollutant;
+document.getElementById('metric-name').textContent = w.metricLabel + '（实时）';
+document.getElementById('fact').textContent = w.fact;
+document.getElementById('base').textContent = w.base;
+
+const chips = document.getElementById('topping-chips');
+w.toppings.forEach(t => {
+  const c = document.createElement('span'); c.className='chip'; c.textContent=t; chips.appendChild(c);
+});
+
+// 根据污染强度算颜色/浓度
+function applyRecipe(intensity, metricVal, metricUnit, sst){
+  // intensity 0-1：越高越"脏重"
+  const hue = w.hue;
+  const sat = 30 + intensity*55;        // 越脏越饱和
+  const light = 45 - intensity*22;      // 越脏越暗
+  const liquid = `hsl(${hue},${sat}%,${light}%)`;
+  document.documentElement.style.setProperty('--liquid', liquid);
+  document.documentElement.style.setProperty('--level', (60+intensity*30)+'%');
+
+  // 大堡礁特殊：温度越高越"白化"（去饱和变白）
+  if(w.metric==='sst'){
+    const bl = 40 + intensity*50;
+    document.documentElement.style.setProperty('--liquid', `hsl(190,${60-intensity*55}%,${bl}%)`);
+  }
+
+  document.getElementById('conc-bar').style.width = (intensity*100)+'%';
+  document.getElementById('conc-val').textContent =
+    intensity>0.66 ? '⚠ 重度 · 今天这杯格外浓重' :
+    intensity>0.33 ? '中度 · 今日海况一般' : '轻度 · 今天它稍微好一点';
+  document.getElementById('metric-val').textContent = `${metricVal} ${metricUnit}`;
+  document.getElementById('sst-val').textContent = sst!=null ? `${sst} °C` : '暂无';
+
+  // 顶料珠子（塑料/重金属等）随浓度增多
+  const layer = document.getElementById('toppings');
+  layer.innerHTML='';
+  const n = Math.round(4 + intensity*16);
+  const beadColor = w.metric==='sulphur_dioxide' ? '#e8b33a'
+    : w.pollutant.includes('重金属') ? '#c9cdd4'
+    : w.pollutant.includes('石油') ? '#1a1a1a'
+    : 'rgba(255,255,255,.55)';
+  for(let i=0;i<n;i++){
+    const b=document.createElement('div'); b.className='bead';
+    b.style.background=beadColor;
+    b.style.left=(12+Math.random()*70)+'%';
+    b.style.bottom=(Math.random()*55)+'%';
+    b.style.opacity=0.5+Math.random()*0.5;
+    layer.appendChild(b);
+  }
+
+  document.getElementById('callout').innerHTML =
+    `此刻，${w.name}的<b>${w.metricLabel}</b>读数为 <b>${metricVal} ${metricUnit}</b>。` +
+    `这杯《${w.drink}》的颜色与浓稠，正是由这个真实数字算出的。` +
+    `<br>海洋今天是什么状态，你决定不了——但你可以决定，是否让它继续坏下去。`;
+  document.getElementById('updated').textContent =
+    '数据更新于 ' + new Date().toLocaleString('zh-CN') + ' · 来源 Open-Meteo 全球监测网';
+}
+
+async function load(){
+  let metricVal=0, metricUnit='μg/m³', sst=null, intensity=0.5;
+  try{
+    // 海温（所有饮品都显示）
+    const md = await (await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${w.lat}&longitude=${w.lon}&current=sea_surface_temperature`)).json();
+    sst = md.current.sea_surface_temperature;
+
+    if(w.metric==='sst'){
+      metricVal=sst; metricUnit='°C';
+      intensity=normalizeMetric('sst', sst);
+    } else {
+      const ad = await (await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${w.lat}&longitude=${w.lon}&current=${w.metric}`)).json();
+      metricVal=ad.current[w.metric];
+      intensity=normalizeMetric(w.metric, metricVal);
+    }
+  }catch(e){
+    document.getElementById('conc-val').textContent='实时数据暂不可用（显示基准配方）';
+  }
+  applyRecipe(intensity, metricVal, metricUnit, sst);
+}
+load();
+</script>
+</body>
+</html>
